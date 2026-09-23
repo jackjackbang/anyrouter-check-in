@@ -132,13 +132,20 @@ class NotificationKit:
 		self._post_json('Gotify', url, data)
 
 	def send_telegram(self, title: str, content: str):
-		if not self.telegram_bot_token or not self.telegram_chat_id:
-			raise ValueError('Telegram Bot Token or Chat ID not configured')
+		if not self.telegram_chat_id:
+			raise ValueError('Telegram Chat ID not configured')
 
 		message = f'<b>{title}</b>\n\n{content}'
 		data = {'chat_id': self.telegram_chat_id, 'text': message, 'parse_mode': 'HTML'}
-		url = f'https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage'
-		self._post_json('Telegram', url, data)
+		if self.telegram_bot_token:
+			url = f'https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage'
+			self._post_json('Telegram', url, data)
+			return
+		with httpx.Client(timeout=30.0) as client:
+			response = client.get('https://api.tg.090227.xyz/sendMessage', params=data)
+		if response.status_code >= 400:
+			raise RuntimeError(f'Telegram request failed: HTTP {response.status_code}')
+		
 
 	def send_bark(self, title: str, content: str):
 		if not self.bark_key:
