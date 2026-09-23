@@ -597,6 +597,16 @@ async def main():
 				if not any(account_name in item for item in notification_content):
 					notification_content.append(account_result)
 
+	if not need_notify and account_check_in_details:
+		for account_key, detail in account_check_in_details.items():
+			account_name = detail['name']
+			account_result = format_check_in_notification(detail)
+			if not any(account_name in item for item in notification_content):
+				notification_content.append(account_result)
+		if notification_content:
+			need_notify = True
+			print('[NOTIFY] Daily result notification enabled')
+
 	if current_balance_hash:
 		save_balance_hash(current_balance_hash)
 
